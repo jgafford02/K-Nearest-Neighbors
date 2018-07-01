@@ -1,4 +1,4 @@
-function [y_hat, labels] = KNN(dataset,k,varargin)
+function [y, labels, y_hat, labels_hat] = KNN(dataset,k,varargin)
 % Description: Performs k-nearest neighbors on the dataset identified by
 % 'filename'
 %
@@ -7,8 +7,10 @@ function [y_hat, labels] = KNN(dataset,k,varargin)
 % k: KNN hyperparameter
 %
 % OUTPUTS:
+% y: vector containing true output classes [n_test_data x 1]
+% labels: matrix containing one-hot encoded y [n_test_data x n_classes]
 % y_hat: vector containing estimated output classes [n_test_data x 1]
-% labels: matrix containing one-hot encoded y_hat [n_test_data x n_classes]
+% labels_hat: matrix containing one-hot encoded y_hat [n_test_data x n_classes]
 
 % Written by: Joshua Gafford
 % Date: 06/21/2018
@@ -79,10 +81,10 @@ n_train_data = length(x_train);
 
 % Load testing data
 x_test = data.test.input;
-% y_test = data.test.output;
-y_classes = data.test.classes;
+labels = data.test.output;
+y = data.test.classes;
 
-if n_test_instances>length(y_classes)
+if n_test_instances>length(y)
     msg = 'Number of test instances should not exceed number of samples in test set';
     error(msg);
 end
@@ -101,7 +103,8 @@ end
 % Randomly subsample test data
 rand_ind = randsample(size(x_test,1),n_test_instances);
 x_test = x_test(rand_ind,:);
-y_classes = y_classes(rand_ind);
+y = y(rand_ind);
+labels = labels(rand_ind,:);
 n_test_data = size(x_test,1);
 
 % Vector for holding guessed classes
@@ -124,14 +127,14 @@ for i=1:size(x_test,1)
     
     % Calculate votes and output class estimate
     [~,y_hat(i)] = max(sum(y_train(index(1:k),:),1),[],2); 
-    fprintf('Guess: %i   |   Actual: %i\n',y_hat(i),y_classes(i));
+    fprintf('Guess: %i   |   Actual: %i\n',y_hat(i),y(i));
     
     % Compute and print accuracy
-    accuracy = accuracy + (y_hat(i)==y_classes(i));
+    accuracy = accuracy + (y_hat(i)==y(i));
     fprintf('Accuracy: %f\n',100*accuracy/i);
 end
 
-labels = class_to_output(y_hat);
+labels_hat = class_to_output(y_hat);
 
 % Print overall accuracy
 fprintf('Accuracy: %f pct\n',100.*accuracy/n_test_data);
